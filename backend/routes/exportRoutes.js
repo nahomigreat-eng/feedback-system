@@ -11,36 +11,36 @@ const auth = require("../middleware/auth");
  *   description: Export feedback reports
  */
 
+/**
+ * @swagger
+ * /api/export/excel:
+ *   get:
+ *     summary: Export feedback as Excel file
+ *     tags: [Export]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Excel file generated and downloaded successfully
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+
 // ================= EXCEL EXPORT =================
 router.get("/excel", auth, async (req, res) => {
   try {
     const data = await Feedback.find().lean();
 
     const workbook = new ExcelJS.Workbook();
-
     const sheet = workbook.addWorksheet("Feedback");
 
     sheet.columns = [
-      {
-        header: "Customer ID",
-        key: "customerId",
-        width: 20,
-      },
-      {
-        header: "Rating",
-        key: "rating",
-        width: 10,
-      },
-      {
-        header: "Comment",
-        key: "comment",
-        width: 40,
-      },
-      {
-        header: "Date",
-        key: "createdAt",
-        width: 25,
-      },
+      { header: "Customer ID", key: "customerId", width: 20 },
+      { header: "Rating", key: "rating", width: 10 },
+      { header: "Comment", key: "comment", width: 40 },
+      { header: "Date", key: "createdAt", width: 25 },
     ];
 
     data.forEach((item) => {
@@ -54,9 +54,7 @@ router.get("/excel", auth, async (req, res) => {
       });
     });
 
-    sheet.getRow(1).font = {
-      bold: true,
-    };
+    sheet.getRow(1).font = { bold: true };
 
     res.setHeader(
       "Content-Type",
@@ -69,12 +67,10 @@ router.get("/excel", auth, async (req, res) => {
     );
 
     await workbook.xlsx.write(res);
-
     res.end();
 
   } catch (err) {
     console.error(err);
-
     res.status(500).json({
       message: "Excel export failed",
     });
