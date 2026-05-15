@@ -6,12 +6,16 @@ import { API_URL } from "../config";
 export default function FeedbackPage() {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
-  const [date, setDate] = useState(""); // ✅ NEW DATE STATE
+  const [date, setDate] = useState("");
+  const [loading, setLoading] = useState(false); // ✅ ADDED
 
   const query = new URLSearchParams(useLocation().search);
   const customerId = query.get("customerId");
 
   const submit = async () => {
+    // 🚫 prevent double click
+    if (loading) return;
+
     if (!comment.trim()) {
       alert("Comment required");
       return;
@@ -27,22 +31,35 @@ export default function FeedbackPage() {
       return;
     }
 
-    await fetch(`${API_URL}/api/feedback`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        customerId,
-        rating,
-        comment,
-        date, // ✅ SEND DATE TO DATABASE
-      }),
-    });
+    setLoading(true); // 🔒 lock button
 
-    alert("Submitted successfully");
+    try {
+      const res = await fetch(`${API_URL}/api/feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerId,
+          rating,
+          comment,
+          date,
+        }),
+      });
 
-    setRating(0);
-    setComment("");
-    setDate(""); // reset date
+      if (!res.ok) {
+        throw new Error("Failed to submit feedback");
+      }
+
+      alert("Submitted successfully");
+
+      setRating(0);
+      setComment("");
+      setDate("");
+    } catch (err) {
+      console.error(err);
+      alert("Submission failed. Please try again.");
+    } finally {
+      setLoading(false); // 🔓 unlock button
+    }
   };
 
   return (
@@ -54,7 +71,6 @@ export default function FeedbackPage() {
 
       <StarRating rating={rating} setRating={setRating} />
 
-      {/* ✅ DATE INPUT ADDED */}
       <input
         type="date"
         value={date}
@@ -71,8 +87,16 @@ export default function FeedbackPage() {
 
       <br />
 
-      <button style={styles.button} onClick={submit}>
-        Submit
+      <button
+        style={{
+          ...styles.button,
+          opacity: loading ? 0.6 : 1,
+          cursor: loading ? "not-allowed" : "pointer",
+        }}
+        onClick={submit}
+        disabled={loading}
+      >
+        {loading ? "Submitting..." : "Submit"}
       </button>
     </div>
   );
@@ -110,6 +134,5 @@ const styles = {
     color: "white",
     border: "none",
     borderRadius: "6px",
-    cursor: "pointer",
   },
 };
