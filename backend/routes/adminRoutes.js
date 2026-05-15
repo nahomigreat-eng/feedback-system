@@ -12,6 +12,28 @@ const auth = require("../middleware/auth");
  *   description: Admin management APIs
  */
 
+/**
+ * @swagger
+ * /api/admin/login:
+ *   post:
+ *     summary: Admin login
+ *     tags: [Admin]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ */
+
 // ================= LOGIN =================
 router.post("/login", async (req, res) => {
   try {
@@ -20,20 +42,13 @@ router.post("/login", async (req, res) => {
     const admin = await Admin.findOne({ username });
 
     if (!admin) {
-      return res.status(400).json({
-        message: "Invalid username",
-      });
+      return res.status(400).json({ message: "Invalid username" });
     }
 
-    const isMatch = await bcrypt.compare(
-      password,
-      admin.password
-    );
+    const isMatch = await bcrypt.compare(password, admin.password);
 
     if (!isMatch) {
-      return res.status(400).json({
-        message: "Invalid password",
-      });
+      return res.status(400).json({ message: "Invalid password" });
     }
 
     const token = jwt.sign(
@@ -46,65 +61,37 @@ router.post("/login", async (req, res) => {
       message: "Login successful",
       token,
     });
-
   } catch (err) {
     console.error(err);
-
-    res.status(500).json({
-      message: "Server error",
-    });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
 // ================= CHANGE PASSWORD =================
 router.post("/change-password", auth, async (req, res) => {
   try {
-    const {
-      username,
-      oldPassword,
-      newPassword,
-    } = req.body;
+    const { username, oldPassword, newPassword } = req.body;
 
-    const admin = await Admin.findOne({
-      username,
-    });
+    const admin = await Admin.findOne({ username });
 
     if (!admin) {
-      return res.status(400).json({
-        message: "Invalid user",
-      });
+      return res.status(400).json({ message: "Invalid user" });
     }
 
-    const isMatch = await bcrypt.compare(
-      oldPassword,
-      admin.password
-    );
+    const isMatch = await bcrypt.compare(oldPassword, admin.password);
 
     if (!isMatch) {
-      return res.status(401).json({
-        message: "Wrong old password",
-      });
+      return res.status(401).json({ message: "Wrong old password" });
     }
 
-    const hashedPassword = await bcrypt.hash(
-      newPassword,
-      10
-    );
-
-    admin.password = hashedPassword;
+    admin.password = await bcrypt.hash(newPassword, 10);
 
     await admin.save();
 
-    res.json({
-      message: "Password updated successfully",
-    });
-
+    res.json({ message: "Password updated successfully" });
   } catch (err) {
     console.error(err);
-
-    res.status(500).json({
-      message: "Server error",
-    });
+    res.status(500).json({ message: "Server error" });
   }
 });
 

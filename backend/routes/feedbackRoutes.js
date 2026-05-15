@@ -16,6 +16,29 @@ const auth = require("../middleware/auth");
  *   post:
  *     summary: Submit feedback
  *     tags: [Feedback]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               customerId:
+ *                 type: string
+ *                 example: CUST001
+ *               rating:
+ *                 type: integer
+ *                 example: 5
+ *               comment:
+ *                 type: string
+ *                 example: Great service
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 example: 2026-01-01
+ *     responses:
+ *       200:
+ *         description: Feedback saved successfully
  */
 
 // ================= SUBMIT FEEDBACK =================
@@ -24,15 +47,11 @@ router.post("/", async (req, res) => {
     const { customerId, rating, comment, date } = req.body;
 
     if (!comment || comment.trim() === "") {
-      return res.status(400).json({
-        error: "Comment required",
-      });
+      return res.status(400).json({ error: "Comment required" });
     }
 
     if (!rating || rating < 1 || rating > 5) {
-      return res.status(400).json({
-        error: "Rating must be between 1 and 5",
-      });
+      return res.status(400).json({ error: "Rating must be between 1 and 5" });
     }
 
     const createdAt = date
@@ -48,17 +67,10 @@ router.post("/", async (req, res) => {
 
     await feedback.save();
 
-    res.json({
-      message: "Feedback saved successfully",
-    });
-
+    res.json({ message: "Feedback saved successfully" });
   } catch (err) {
     console.error(err);
-
-    res.status(500).json({
-      error: "Server error",
-      details: err.message,
-    });
+    res.status(500).json({ error: "Server error", details: err.message });
   }
 });
 
@@ -68,6 +80,24 @@ router.post("/", async (req, res) => {
  *   get:
  *     summary: Get feedback with filters
  *     tags: [Feedback]
+ *     parameters:
+ *       - in: query
+ *         name: rating
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: fromDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: toDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *     responses:
+ *       200:
+ *         description: Feedback list retrieved successfully
  */
 
 // ================= GET FEEDBACK =================
@@ -77,39 +107,20 @@ router.get("/", auth, async (req, res) => {
 
     let filter = {};
 
-    // Rating filter
-    if (rating) {
-      filter.rating = Number(rating);
-    }
+    if (rating) filter.rating = Number(rating);
 
-    // Date filter
     if (fromDate || toDate) {
       filter.createdAt = {};
-
-      if (fromDate) {
-        filter.createdAt.$gte = new Date(fromDate);
-      }
-
-      if (toDate) {
-        filter.createdAt.$lte = new Date(
-          toDate + "T23:59:59.999Z"
-        );
-      }
+      if (fromDate) filter.createdAt.$gte = new Date(fromDate);
+      if (toDate) filter.createdAt.$lte = new Date(toDate + "T23:59:59.999Z");
     }
 
-    const data = await Feedback.find(filter).sort({
-      createdAt: -1,
-    });
+    const data = await Feedback.find(filter).sort({ createdAt: -1 });
 
     res.json(data);
-
   } catch (err) {
     console.error(err);
-
-    res.status(500).json({
-      error: "Server error",
-      details: err.message,
-    });
+    res.status(500).json({ error: "Server error", details: err.message });
   }
 });
 
@@ -119,6 +130,15 @@ router.get("/", auth, async (req, res) => {
  *   get:
  *     summary: Get feedback by customer ID
  *     tags: [Feedback]
+ *     parameters:
+ *       - in: path
+ *         name: customerId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Feedback retrieved successfully
  */
 
 // ================= GET BY CUSTOMER ID =================
@@ -129,14 +149,9 @@ router.get("/:customerId", auth, async (req, res) => {
     });
 
     res.json(data);
-
   } catch (err) {
     console.error(err);
-
-    res.status(500).json({
-      error: "Server error",
-      details: err.message,
-    });
+    res.status(500).json({ error: "Server error", details: err.message });
   }
 });
 
