@@ -1,7 +1,21 @@
 const express = require("express");
 const router = express.Router();
 const Feedback = require("../models/Feedback");
+const Counter = require("../models/Counter"); // ✅ ADDED
 const auth = require("../middleware/auth");
+
+/**
+ * 🔥 AUTO CUSTOMER ID GENERATOR (DATABASE-BASED)
+ */
+async function generateCustomerId() {
+  const counter = await Counter.findOneAndUpdate(
+    { name: "customerId" },
+    { $inc: { value: 1 } },
+    { new: true, upsert: true }
+  );
+
+  return "CUST" + String(counter.value).padStart(3, "0");
+}
 
 /**
  * @swagger
@@ -11,40 +25,11 @@ const auth = require("../middleware/auth");
  */
 
 /**
- * @swagger
- * /api/feedback:
- *   post:
- *     summary: Submit feedback
- *     tags: [Feedback]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               customerId:
- *                 type: string
- *                 example: CUST001
- *               rating:
- *                 type: integer
- *                 example: 5
- *               comment:
- *                 type: string
- *                 example: Great service
- *               date:
- *                 type: string
- *                 format: date
- *                 example: 2026-01-01
- *     responses:
- *       200:
- *         description: Feedback saved successfully
+ * ================= SUBMIT FEEDBACK =================
  */
-
-// ================= SUBMIT FEEDBACK =================
 router.post("/", async (req, res) => {
   try {
-    const { customerId, rating, comment, date } = req.body;
+    const { rating, comment, date } = req.body;
 
     if (!comment || comment.trim() === "") {
       return res.status(400).json({ error: "Comment required" });
@@ -53,6 +38,9 @@ router.post("/", async (req, res) => {
     if (!rating || rating < 1 || rating > 5) {
       return res.status(400).json({ error: "Rating must be between 1 and 5" });
     }
+
+    // 🔥 GENERATE UNIQUE CUSTOMER ID
+    const customerId = await generateCustomerId();
 
     const createdAt = date
       ? new Date(date + "T00:00:00.000Z")
@@ -67,7 +55,11 @@ router.post("/", async (req, res) => {
 
     await feedback.save();
 
-    res.json({ message: "Feedback saved successfully" });
+    res.json({
+      message: "Feedback saved successfully",
+      customerId, // optional but useful for QR generation
+    });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error", details: err.message });
@@ -75,32 +67,8 @@ router.post("/", async (req, res) => {
 });
 
 /**
- * @swagger
- * /api/feedback:
- *   get:
- *     summary: Get feedback with filters
- *     tags: [Feedback]
- *     parameters:
- *       - in: query
- *         name: rating
- *         schema:
- *           type: integer
- *       - in: query
- *         name: fromDate
- *         schema:
- *           type: string
- *           format: date
- *       - in: query
- *         name: toDate
- *         schema:
- *           type: string
- *           format: date
- *     responses:
- *       200:
- *         description: Feedback list retrieved successfully
+ * ================= GET FEEDBACK =================
  */
-
-// ================= GET FEEDBACK =================
 router.get("/", auth, async (req, res) => {
   try {
     const { rating, fromDate, toDate } = req.query;
@@ -125,23 +93,8 @@ router.get("/", auth, async (req, res) => {
 });
 
 /**
- * @swagger
- * /api/feedback/{customerId}:
- *   get:
- *     summary: Get feedback by customer ID
- *     tags: [Feedback]
- *     parameters:
- *       - in: path
- *         name: customerId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Feedback retrieved successfully
+ * ================= GET BY CUSTOMER ID =================
  */
-
-// ================= GET BY CUSTOMER ID =================
 router.get("/:customerId", auth, async (req, res) => {
   try {
     const data = await Feedback.find({
