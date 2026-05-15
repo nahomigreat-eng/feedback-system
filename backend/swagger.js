@@ -12,7 +12,7 @@ const options = {
 
     servers: [
       {
-        url: "http://localhost:5000/api", // ✅ IMPORTANT: matches your routes base path
+        url: "https://feedback-system-nrtf.onrender.com", // ✅ IMPORTANT: matches your routes base path
       },
     ],
   },
