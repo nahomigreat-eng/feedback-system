@@ -31,7 +31,7 @@ async function generateQR() {
 
     // 🔥 IMPORTANT CHANGE (DYNAMIC SYSTEM)
     // QR should NOT contain customerId anymore
-    const url = "https://your-backend.onrender.com/scan";
+    const url = "https://feedback-system-nrtf.onrender.com/scan";
 
     await QRCode.toFile(`qr-${customerId}.png`, url);
 
