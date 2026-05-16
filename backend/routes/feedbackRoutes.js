@@ -44,23 +44,33 @@ const auth = require("../middleware/auth");
  *     responses:
  *       200:
  *         description: Feedback saved successfully
- *       200:
- *         description: Mising field
+ *       400:
+ *         description: Missing required fields (customerId, rating, or comment)
+ *       500:
+ *         description: Server error
  */
 router.post("/", async (req, res) => {
   try {
     const { customerId, rating, comment, date } = req.body;
 
-    if (!customerId)
-      return res.status(400).json({ error: "Customer ID required" });
+    // VALIDATION
+    if (!customerId) {
+      return res.status(400).json({
+        error: "Customer ID required",
+      });
+    }
 
-    if (!comment || comment.trim() === "")
-      return res.status(400).json({ error: "Comment required" });
+    if (!comment || comment.trim() === "") {
+      return res.status(400).json({
+        error: "Comment required",
+      });
+    }
 
-    if (!rating || rating < 1 || rating > 5)
+    if (!rating || rating < 1 || rating > 5) {
       return res.status(400).json({
         error: "Rating must be between 1 and 5",
       });
+    }
 
     const createdAt = date
       ? new Date(date + "T00:00:00.000Z")
@@ -75,18 +85,20 @@ router.post("/", async (req, res) => {
 
     await feedback.save();
 
-    res.json({
+    return res.status(200).json({
       message: "Feedback saved successfully",
       customerId,
     });
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({
+      error: err.message,
+    });
   }
 });
 
 /**
- * ================= GET ALL FEEDBACK (FILTER SUPPORT) =================
+ * ================= GET ALL FEEDBACK =================
  * @swagger
  * /api/feedback:
  *   get:
@@ -111,6 +123,8 @@ router.post("/", async (req, res) => {
  *     responses:
  *       200:
  *         description: List of feedback
+ *       500:
+ *         description: Server error
  */
 router.get("/", async (req, res) => {
   try {
@@ -138,10 +152,12 @@ router.get("/", async (req, res) => {
       createdAt: -1,
     });
 
-    res.json(data);
+    return res.json(data);
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({
+      error: err.message,
+    });
   }
 });
 
@@ -158,9 +174,12 @@ router.get("/", async (req, res) => {
  *         required: true
  *         schema:
  *           type: string
+ *         example: CUST001
  *     responses:
  *       200:
  *         description: Customer feedback list
+ *       500:
+ *         description: Server error
  */
 router.get("/:customerId", async (req, res) => {
   try {
@@ -168,10 +187,12 @@ router.get("/:customerId", async (req, res) => {
       customerId: req.params.customerId,
     });
 
-    res.json(data);
+    return res.json(data);
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({
+      error: err.message,
+    });
   }
 });
 
