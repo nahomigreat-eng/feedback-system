@@ -16,7 +16,7 @@ const auth = require("../middleware/auth");
  * @swagger
  * /api/feedback:
  *   post:
-] *     summary: Submit feedback
+ *     summary: Submit feedback
  *     tags: [Feedback]
  *     requestBody:
  *       required: true
@@ -84,7 +84,7 @@ router.post("/", async (req, res) => {
 });
 
 /**
- * ================= GET ALL FEEDBACK by filter (fixed)=================
+ * ================= GET ALL FEEDBACK (FILTER SUPPORT) =================
  * @swagger
  * /api/feedback:
  *   get:
@@ -96,19 +96,16 @@ router.post("/", async (req, res) => {
  *         schema:
  *           type: number
  *         description: Filter by rating (1-5)
- *
  *       - in: query
  *         name: fromDate
  *         schema:
  *           type: string
  *         description: Start date (YYYY-MM-DD)
- *
  *       - in: query
  *         name: toDate
  *         schema:
  *           type: string
  *         description: End date (YYYY-MM-DD)
- *
  *     responses:
  *       200:
  *         description: List of feedback
@@ -119,12 +116,10 @@ router.get("/", async (req, res) => {
 
     let filter = {};
 
-    // ✅ Filter by rating
     if (rating) {
       filter.rating = Number(rating);
     }
 
-    // ✅ Filter by date range
     if (fromDate || toDate) {
       filter.createdAt = {};
 
@@ -172,6 +167,7 @@ router.get("/:customerId", async (req, res) => {
     });
 
     res.json(data);
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
