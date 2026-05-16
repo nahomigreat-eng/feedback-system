@@ -10,14 +10,16 @@ const options = {
       description: "API documentation for Feedback Management System",
     },
 
+    // ✅ IMPORTANT: include /api because your routes use app.use("/api/...")
     servers: [
       {
-        url: "https://feedback-system-nrtf.onrender.com", // ✅ IMPORTANT: matches your routes base path
+        url: "https://feedback-system-nrtf.onrender.com/api",
       },
     ],
   },
 
-  // ✅ Make sure this path is correct relative to server.js
+  // ✅ FIXED: ensure correct path for route scanning
+  // (works if swagger.js is inside backend folder)
   apis: ["./routes/*.js"],
 };
 
