@@ -31,10 +31,16 @@ const auth = require("../middleware/auth");
  *             properties:
  *               customerId:
  *                 type: string
+ *                 example: CUST001
  *               rating:
  *                 type: number
+ *                 example: 5
  *               comment:
  *                 type: string
+ *                 example: "Great service"
+ *               date:
+ *                 type: string
+ *                 example: "2026-05-16"
  *     responses:
  *       200:
  *         description: Feedback saved successfully
@@ -43,9 +49,16 @@ router.post("/", async (req, res) => {
   try {
     const { customerId, rating, comment, date } = req.body;
 
-    if (!customerId) return res.status(400).json({ error: "Customer ID required" });
-    if (!comment || comment.trim() === "") return res.status(400).json({ error: "Comment required" });
-    if (!rating || rating < 1 || rating > 5) return res.status(400).json({ error: "Rating must be between 1 and 5" });
+    if (!customerId)
+      return res.status(400).json({ error: "Customer ID required" });
+
+    if (!comment || comment.trim() === "")
+      return res.status(400).json({ error: "Comment required" });
+
+    if (!rating || rating < 1 || rating > 5)
+      return res.status(400).json({
+        error: "Rating must be between 1 and 5",
+      });
 
     const createdAt = date
       ? new Date(date + "T00:00:00.000Z")
@@ -71,7 +84,7 @@ router.post("/", async (req, res) => {
 });
 
 /**
- * ================= GET FEEDBACK =================
+ * ================= GET ALL FEEDBACK =================
  * @swagger
  * /api/feedback:
  *   get:
@@ -79,7 +92,7 @@ router.post("/", async (req, res) => {
  *     tags: [Feedback]
  *     responses:
  *       200:
- *         description: List of feedback
+ *         description: List of all feedback
  */
 router.get("/", auth, async (req, res) => {
   try {
