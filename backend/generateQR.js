@@ -3,15 +3,18 @@ const mongoose = require("mongoose");
 const Counter = require("./models/Counter");
 require("dotenv").config();
 
-// MongoDB connection
 const MONGO_URI = process.env.MONGO_URI;
 
-mongoose.connect(MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch(err => {
+// Connect DB FIRST and WAIT
+async function connectDB() {
+  try {
+    await mongoose.connect(MONGO_URI);
+    console.log("MongoDB connected");
+  } catch (err) {
     console.error("MongoDB connection error:", err);
     process.exit(1);
-  });
+  }
+}
 
 // Get next ID
 async function getNextId() {
@@ -24,14 +27,13 @@ async function getNextId() {
   return "CUST" + String(counter.value).padStart(3, "0");
 }
 
-// Generate QR (IMPORTANT: DYNAMIC SYSTEM VERSION)
+// Generate QR
 async function generateQR() {
   try {
     const customerId = await getNextId();
 
-    // 🔥 IMPORTANT CHANGE (DYNAMIC SYSTEM)
-    // QR should NOT contain customerId anymore
-    const url = "https://feedback-system-nrtf.onrender.com/scan";
+    const url =
+      "https://feedback-system-nrtf.onrender.com/scan";
 
     await QRCode.toFile(`qr-${customerId}.png`, url);
 
@@ -44,4 +46,9 @@ async function generateQR() {
   }
 }
 
-generateQR();
+// MAIN FLOW (IMPORTANT FIX)
+(async () => {
+  await connectDB();
+  await generateQR();
+  mongoose.connection.close();
+})();
