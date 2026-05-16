@@ -94,7 +94,7 @@ router.post("/", async (req, res) => {
  *       200:
  *         description: List of all feedback
  */
-router.get("/", auth, async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const data = await Feedback.find().sort({ createdAt: -1 });
     res.json(data);
@@ -120,7 +120,7 @@ router.get("/", auth, async (req, res) => {
  *       200:
  *         description: Customer feedback list
  */
-router.get("/:customerId", auth, async (req, res) => {
+router.get("/:customerId", async (req, res) => {
   try {
     const data = await Feedback.find({
       customerId: req.params.customerId,
