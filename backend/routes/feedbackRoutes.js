@@ -13,38 +13,44 @@ const auth = require("../middleware/auth");
 
 /**
  * ================= SUBMIT FEEDBACK =================
+ * @swagger
+ * /api/feedback:
+ *   post:
+ *     summary: Submit feedback
+ *     tags: [Feedback]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - customerId
+ *               - rating
+ *               - comment
+ *             properties:
+ *               customerId:
+ *                 type: string
+ *               rating:
+ *                 type: number
+ *               comment:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Feedback saved successfully
  */
 router.post("/", async (req, res) => {
   try {
     const { customerId, rating, comment, date } = req.body;
 
-    // ✅ Customer ID required
-    if (!customerId) {
-      return res.status(400).json({
-        error: "Customer ID required",
-      });
-    }
+    if (!customerId) return res.status(400).json({ error: "Customer ID required" });
+    if (!comment || comment.trim() === "") return res.status(400).json({ error: "Comment required" });
+    if (!rating || rating < 1 || rating > 5) return res.status(400).json({ error: "Rating must be between 1 and 5" });
 
-    // ✅ Comment validation
-    if (!comment || comment.trim() === "") {
-      return res.status(400).json({
-        error: "Comment required",
-      });
-    }
-
-    // ✅ Rating validation
-    if (!rating || rating < 1 || rating > 5) {
-      return res.status(400).json({
-        error: "Rating must be between 1 and 5",
-      });
-    }
-
-    // ✅ Date handling
     const createdAt = date
       ? new Date(date + "T00:00:00.000Z")
       : new Date();
 
-    // ✅ Save feedback
     const feedback = new Feedback({
       customerId,
       rating,
@@ -54,69 +60,52 @@ router.post("/", async (req, res) => {
 
     await feedback.save();
 
-    // ✅ Success response
     res.json({
       message: "Feedback saved successfully",
       customerId,
     });
 
   } catch (err) {
-    console.error(err);
-
-    res.status(500).json({
-      error: "Server error",
-      details: err.message,
-    });
+    res.status(500).json({ error: err.message });
   }
 });
 
 /**
  * ================= GET FEEDBACK =================
+ * @swagger
+ * /api/feedback:
+ *   get:
+ *     summary: Get all feedback
+ *     tags: [Feedback]
+ *     responses:
+ *       200:
+ *         description: List of feedback
  */
 router.get("/", auth, async (req, res) => {
   try {
-    const { rating, fromDate, toDate } = req.query;
-
-    let filter = {};
-
-    // ✅ Filter by rating
-    if (rating) {
-      filter.rating = Number(rating);
-    }
-
-    // ✅ Filter by date range
-    if (fromDate || toDate) {
-      filter.createdAt = {};
-
-      if (fromDate) {
-        filter.createdAt.$gte = new Date(fromDate);
-      }
-
-      if (toDate) {
-        filter.createdAt.$lte = new Date(
-          toDate + "T23:59:59.999Z"
-        );
-      }
-    }
-
-    const data = await Feedback.find(filter).sort({
-      createdAt: -1,
-    });
-
+    const data = await Feedback.find().sort({ createdAt: -1 });
     res.json(data);
-
   } catch (err) {
-    console.error(err);
-
-    res.status(500).json({
-      error: "Server error",
-      details: err.message,
-    });
+    res.status(500).json({ error: err.message });
   }
 });
 
 /**
  * ================= GET BY CUSTOMER ID =================
+ * @swagger
+ * /api/feedback/{customerId}:
+ *   get:
+ *     summary: Get feedback by customer ID
+ *     tags: [Feedback]
+ *     parameters:
+ *       - in: path
+ *         name: customerId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Customer feedback list
  */
 router.get("/:customerId", auth, async (req, res) => {
   try {
@@ -125,14 +114,8 @@ router.get("/:customerId", auth, async (req, res) => {
     });
 
     res.json(data);
-
   } catch (err) {
-    console.error(err);
-
-    res.status(500).json({
-      error: "Server error",
-      details: err.message,
-    });
+    res.status(500).json({ error: err.message });
   }
 });
 
