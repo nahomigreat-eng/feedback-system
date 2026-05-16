@@ -84,11 +84,11 @@ router.post("/", async (req, res) => {
 });
 
 /**
- * ================= GET ALL FEEDBACK =================
+ * ================= GET ALL FEEDBACK (FILTER FIXED) =================
  * @swagger
  * /api/feedback:
  *   get:
- *     summary: Get all feedback
+ *     summary: Get all feedback (with filters)
  *     tags: [Feedback]
  *     responses:
  *       200:
@@ -96,8 +96,34 @@ router.post("/", async (req, res) => {
  */
 router.get("/", async (req, res) => {
   try {
-    const data = await Feedback.find().sort({ createdAt: -1 });
+    const { rating, fromDate, toDate } = req.query;
+
+    let filter = {};
+
+    // ✅ Filter by rating
+    if (rating) {
+      filter.rating = Number(rating);
+    }
+
+    // ✅ Filter by date range
+    if (fromDate || toDate) {
+      filter.createdAt = {};
+
+      if (fromDate) {
+        filter.createdAt.$gte = new Date(fromDate);
+      }
+
+      if (toDate) {
+        filter.createdAt.$lte = new Date(toDate + "T23:59:59.999Z");
+      }
+    }
+
+    const data = await Feedback.find(filter).sort({
+      createdAt: -1,
+    });
+
     res.json(data);
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
