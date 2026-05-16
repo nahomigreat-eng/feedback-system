@@ -16,7 +16,7 @@ const auth = require("../middleware/auth");
  * @swagger
  * /api/feedback:
  *   post:
- *     summary: Submit feedback
+] *     summary: Submit feedback
  *     tags: [Feedback]
  *     requestBody:
  *       required: true
@@ -84,15 +84,34 @@ router.post("/", async (req, res) => {
 });
 
 /**
- * ================= GET ALL FEEDBACK (FILTER FIXED) =================
+ * ================= GET ALL FEEDBACK by filter (fixed)=================
  * @swagger
  * /api/feedback:
  *   get:
- *     summary: Get all feedback (with filters)
+ *     summary: Get all feedback (supports filtering)
  *     tags: [Feedback]
+ *     parameters:
+ *       - in: query
+ *         name: rating
+ *         schema:
+ *           type: number
+ *         description: Filter by rating (1-5)
+ *
+ *       - in: query
+ *         name: fromDate
+ *         schema:
+ *           type: string
+ *         description: Start date (YYYY-MM-DD)
+ *
+ *       - in: query
+ *         name: toDate
+ *         schema:
+ *           type: string
+ *         description: End date (YYYY-MM-DD)
+ *
  *     responses:
  *       200:
- *         description: List of all feedback
+ *         description: List of feedback
  */
 router.get("/", async (req, res) => {
   try {
